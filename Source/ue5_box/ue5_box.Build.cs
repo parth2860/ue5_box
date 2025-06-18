@@ -17,8 +17,9 @@ public class ue5_box : ModuleRules
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
-			"UMG"
-		});
+			"UMG",
+            "HTTP", "Json", "JsonUtilities"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
