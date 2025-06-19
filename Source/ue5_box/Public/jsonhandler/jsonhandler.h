@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "UObject/NoExportTypes.h"
 #include "Http.h"
+#include "boxhandler/data/boxdata.h"
 #include "jsonhandler.generated.h"
 
 UCLASS()
@@ -33,5 +34,14 @@ public:
 	// HTTP response callback
 	void OnBoxDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	// void CreateBox(const FString& Type, const FString& Color, float Health, int32 Score);
+	//void ParseJson(const FString& JsonString, TArray<FBoxData>& OutBoxDataArray);
+	void ParseJson(const FString& JsonStr, TArray<FBoxData>& ParsedBoxData);// parse & fill data
+
+	// Store parsed data here
+	TArray<FBoxData> CachedBoxData;//store data
+
+	// Provide the data to anyone asking------------------------
+	const TArray<FBoxData>& GetParsedBoxData() const { return CachedBoxData; }//read data later
+	
+	void DisplayCachedBoxData();
 };
