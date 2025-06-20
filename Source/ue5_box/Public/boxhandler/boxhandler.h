@@ -26,12 +26,60 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Function to spawn boxes from cached data
-	void SpawnBoxesFromData(const TArray<FBoxData>& BoxDataArray);
+    //--------------------------------------------------------------
 
-	UPROPERTY()
-	Ajsonhandler* JsonHandlerRef ;   
-	//
+    //void Getdata(const TArray<FBoxData>& BoxDataArray);
+    void Getdata();
+
+    UPROPERTY()
+    Ajsonhandler* JsonHandlerRef;
+
+    // Function to initialize the box with the required properties
+    void InitializeBox(FString Boxtype, FVector Location, FRotator Rotation, FVector Scale, FLinearColor Color, int32 Health, int32 Score);
+
+    // Function to apply damage when the box is shot
+    void ApplyDamage();
+
+    // Function to handle the destruction of the box
+    void DestroyBox();
+
+    // Function to update the score
+    void UpdateScore();
+
+    // Health and score variables
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    int32 CubeHealth;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    int32 CubeScore;
+
+    // Member variables to hold cube data
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FString CubeType;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FVector CubeLocation;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FRotator CubeRotation;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FVector CubeScale;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FLinearColor CubeColor;
+
+    // Mesh for the box
+    UPROPERTY(VisibleAnywhere)
+    UStaticMeshComponent* BoxMesh;
+
+    // Material for the box
+    UPROPERTY(VisibleAnywhere)
+    UMaterialInstanceDynamic* BoxMaterial;
+
+    // Display total score
+   // static int32 TotalScore;
+    int32 TotalScore;
 
 
 };

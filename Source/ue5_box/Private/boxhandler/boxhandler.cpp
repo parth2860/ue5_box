@@ -3,6 +3,7 @@
 
 #include "boxhandler/boxhandler.h"
 #include "Engine/World.h"
+#include "boxhandler/data/boxdata.h"
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -12,7 +13,25 @@ Aboxhandler::Aboxhandler()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-    JsonHandlerRef = nullptr;  // important — init null
+    
+    // Create and attach the StaticMeshComponent to the actor
+    BoxMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BoxMesh"));
+    RootComponent = BoxMesh;
+
+    // Load the mesh asset
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> BoxMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'"));
+    if (BoxMeshAsset.Succeeded())
+    {
+        BoxMesh->SetStaticMesh(BoxMeshAsset.Object);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to load static mesh for BoxMesh. Check the asset path."));
+    }
+
+    // Default values
+    CubeHealth = 0;
+    CubeScore = 0;
 }
 
 void Aboxhandler::Tick(float DeltaTime)
@@ -22,7 +41,12 @@ void Aboxhandler::Tick(float DeltaTime)
 void Aboxhandler::BeginPlay()
 {
     Super::BeginPlay();
-    //
+    
+}
+
+/*
+void Aboxhandler::Getdata(const TArray<FBoxData>& BoxDataArray)
+{
     // ✅ Auto-find JsonHandler actor placed in level
     TArray<AActor*> FoundHandlers;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), Ajsonhandler::StaticClass(), FoundHandlers);
@@ -49,7 +73,7 @@ void Aboxhandler::BeginPlay()
             if (JsonHandlerRef)
             {
                 const TArray<FBoxData>& FetchedData = JsonHandlerRef->GetParsedBoxData();
-                SpawnBoxesFromData(FetchedData);
+                Getdata(FetchedData);
             }
             else
             {
@@ -57,12 +81,8 @@ void Aboxhandler::BeginPlay()
             }
 
         }, 5.0f, false);
-}
-
-void Aboxhandler::SpawnBoxesFromData(const TArray<FBoxData>& BoxDataArray)
-{
     UE_LOG(LogTemp, Log, TEXT("BoxHandler: Received %d boxes."), BoxDataArray.Num());
-
+    //------------------------------------------------
     for (const FBoxData& BoxData : BoxDataArray)
     {
         UE_LOG(LogTemp, Log, TEXT("--- Box Data ---"));
@@ -74,5 +94,176 @@ void Aboxhandler::SpawnBoxesFromData(const TArray<FBoxData>& BoxDataArray)
         UE_LOG(LogTemp, Log, TEXT("Score: %d"), BoxData.Score);
         UE_LOG(LogTemp, Log, TEXT("Color: R=%f G=%f B=%f A=%f"),
             BoxData.Color.R, BoxData.Color.G, BoxData.Color.B, BoxData.Color.A);
+
+        // SPAWN NEW CUBE ACTOR:
+        if (UWorld* World = GetWorld())
+        {
+            FActorSpawnParameters SpawnParams;
+            Aboxhandler* NewCube = World->SpawnActor<Aboxhandler>(Aboxhandler::StaticClass(), BoxData.Location, BoxData.Rotation, SpawnParams);
+
+            if (NewCube)
+            {
+                NewCube->InitializeBox(BoxData.Type, BoxData.Location, BoxData.Rotation, BoxData.Scale, BoxData.Color, BoxData.Health, BoxData.Score);
+                UE_LOG(LogTemp, Log, TEXT("Spawned new Aboxhandler actor with box data."));
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to spawn Aboxhandler actor."));
+            }
+        }
     }
+}
+*/
+void Aboxhandler::Getdata()
+{
+    // ✅ Get valid world
+    UWorld* WorldContext = GetWorld();
+
+    if (!WorldContext)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Aboxhandler::Getdata() - GetWorld() is NULL! Cannot continue."));
+        return;
+    }
+
+    // ✅ Auto-find JsonHandler actor placed in level
+    TArray<AActor*> FoundHandlers;
+    UGameplayStatics::GetAllActorsOfClass(WorldContext, Ajsonhandler::StaticClass(), FoundHandlers);
+
+    if (FoundHandlers.Num() > 0)
+    {
+        JsonHandlerRef = Cast<Ajsonhandler>(FoundHandlers[0]);
+        UE_LOG(LogTemp, Log, TEXT("JsonHandlerRef found successfully."));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("JsonHandler not found in level!"));
+        return;
+    }
+
+    // ✅ Fetch parsed box data
+    const TArray<FBoxData>& FetchedData = JsonHandlerRef->GetParsedBoxData();
+    UE_LOG(LogTemp, Log, TEXT("BoxHandler: Received %d boxes."), FetchedData.Num());
+
+    // ✅ Loop & spawn THIS CLASS actor (Aboxhandler)
+    for (const FBoxData& BoxData : FetchedData)
+    {
+        UE_LOG(LogTemp, Log, TEXT("--- Box Data ---"));
+        UE_LOG(LogTemp, Log, TEXT("Type: %s"), *BoxData.Type);
+        UE_LOG(LogTemp, Log, TEXT("Location: %s"), *BoxData.Location.ToString());
+        UE_LOG(LogTemp, Log, TEXT("Rotation: %s"), *BoxData.Rotation.ToString());
+        UE_LOG(LogTemp, Log, TEXT("Scale: %s"), *BoxData.Scale.ToString());
+        UE_LOG(LogTemp, Log, TEXT("Health: %f"), BoxData.Health);
+        UE_LOG(LogTemp, Log, TEXT("Score: %d"), BoxData.Score);
+        UE_LOG(LogTemp, Log, TEXT("Color: R=%f G=%f B=%f A=%f"),
+            BoxData.Color.R, BoxData.Color.G, BoxData.Color.B, BoxData.Color.A);
+
+        // SPAWN NEW Aboxhandler ACTOR:
+        FActorSpawnParameters SpawnParams;
+        Aboxhandler* NewBox = WorldContext->SpawnActor<Aboxhandler>(Aboxhandler::StaticClass(), BoxData.Location, BoxData.Rotation, SpawnParams);
+
+        if (NewBox)
+        {
+            NewBox->InitializeBox(BoxData.Type, BoxData.Location, BoxData.Rotation, BoxData.Scale, BoxData.Color, BoxData.Health, BoxData.Score);
+            UE_LOG(LogTemp, Log, TEXT("Spawned new Aboxhandler actor with box data."));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to spawn Aboxhandler actor."));
+        }
+    }
+}
+
+
+// Initialize the box properties using data from the JSON
+void Aboxhandler::InitializeBox(FString Boxtype, FVector Location, FRotator Rotation, FVector Scale, FLinearColor Color, int32 Health, int32 Score)
+{
+
+    // Apply material color
+    BoxMaterial = UMaterialInstanceDynamic::Create(BoxMesh->GetMaterial(0), this);
+    BoxMesh->SetMaterial(0, BoxMaterial);
+    BoxMaterial->SetVectorParameterValue("BaseColor", Color);
+
+    // Use this->to refer to the member variables
+    this->CubeType = Boxtype;
+    this->CubeLocation = Location;
+    this->CubeRotation = Rotation;
+    this->CubeScale = Scale;
+    this->CubeColor = Color;
+    this->CubeHealth = Health;
+    this->CubeScore = Score;
+
+    // Set up cube actor properties based on this data
+    SetActorLocation(this->CubeLocation);
+    SetActorRotation(this->CubeRotation);
+    SetActorScale3D(this->CubeScale);
+
+    // Apply material color
+    BoxMaterial = UMaterialInstanceDynamic::Create(BoxMesh->GetMaterial(0), this);
+    BoxMesh->SetMaterial(0, BoxMaterial);
+    BoxMaterial->SetVectorParameterValue("BaseColor", Color);
+
+
+    // Set Material Color based on CubeColor
+    UMaterial* BaseMaterial = LoadObject<UMaterial>(nullptr, TEXT("/Game/FirstPerson/Blueprints/BaseColorMaterial.BaseColorMaterial"));
+    if (BaseMaterial)
+    {
+        // Reload the material to ensure it is fully initialized
+        BaseMaterial->MarkPackageDirty();
+        BaseMaterial->PostEditChange();
+
+        // Now proceed with creating the dynamic material
+        UMaterialInstanceDynamic* MaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+        if (MaterialInstance)
+        {
+            MaterialInstance->SetVectorParameterValue(TEXT("BaseColor"), CubeColor);
+            BoxMesh->SetMaterial(0, MaterialInstance);
+            UE_LOG(LogTemp, Warning, TEXT("Dynamic material applied successfully with color: %s"), *CubeColor.ToString());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Failed to create dynamic material instance."));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Base material not found."));
+    }
+
+}
+
+// Apply damage to the box and reduce health
+void Aboxhandler::ApplyDamage()
+{
+    if (CubeHealth > 0)
+    {
+        CubeHealth -= 1;
+
+        if (CubeHealth <= 0)
+        {
+            DestroyBox();
+        }
+    }
+}
+
+// Destroy the box and update the score
+void Aboxhandler::DestroyBox()
+{
+    TotalScore += CubeScore;
+
+    /*
+    // Get the player reference
+    Aue5_fps_boxCharacter* PlayerReference = Cast<Aue5_fps_boxCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
+    if (PlayerReference)
+    {
+        PlayerReference->UpdateScoreOnUI(TotalScore);
+    }
+    */
+    Destroy();
+    UpdateScore();
+}
+
+void Aboxhandler::UpdateScore()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Total Score: %d"), TotalScore);
 }

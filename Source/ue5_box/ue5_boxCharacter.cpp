@@ -8,6 +8,8 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "boxhandler/boxhandler.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -63,6 +65,11 @@ void Aue5_boxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &Aue5_boxCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &Aue5_boxCharacter::LookInput);
+
+		//lmbaction
+		EnhancedInputComponent->BindAction(LMB_Action, ETriggerEvent::Triggered, this, &Aue5_boxCharacter::lmb_action);
+		//spawnedaction
+		EnhancedInputComponent->BindAction(Spawn_Action, ETriggerEvent::Started, this, &Aue5_boxCharacter::spawned_action);
 	}
 	else
 	{
@@ -121,4 +128,41 @@ void Aue5_boxCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+void Aue5_boxCharacter::lmb_action()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("lmb Action Triggered!"));
+}
+
+void Aue5_boxCharacter::spawned_action()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Spawned Action Triggered!"));
+
+
+	/*if (BoxHandlerRef)
+	{
+		BoxHandlerRef->Getdata();
+		UE_LOG(LogTemp, Log, TEXT("Called Getdata() on Aboxhandler via reference."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("BoxHandlerRef is NULL!"));
+	}*/
+	//
+	TArray<AActor*> FoundBoxHandlers;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), Aboxhandler::StaticClass(), FoundBoxHandlers);
+
+	if (FoundBoxHandlers.Num() > 0)
+	{
+		Aboxhandler* BoxHandler = Cast<Aboxhandler>(FoundBoxHandlers[0]);
+		if (BoxHandler)
+		{
+			BoxHandler->Getdata();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("No Aboxhandler actor found in level!"));
+	}
+
 }

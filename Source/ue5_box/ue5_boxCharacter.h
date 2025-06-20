@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "boxhandler/boxhandler.h"
 #include "ue5_boxCharacter.generated.h"
 
 class UInputComponent;
@@ -48,6 +49,14 @@ protected:
 	/** Mouse Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category ="Input")
 	class UInputAction* MouseLookAction;
+
+	/** cube spawn Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	class UInputAction* Spawn_Action;
+
+	/** mouse leftbutton Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	class UInputAction* LMB_Action;
 	
 public:
 	Aue5_boxCharacter();
@@ -75,6 +84,17 @@ protected:
 	/** Handles jump end inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	/** Handles jump end inputs from either controls or UI interfaces */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	 void lmb_action();
+
+	 /** Handles jump end inputs from either controls or UI interfaces */
+	 UFUNCTION(BlueprintCallable, Category = "Input")
+	 void spawned_action();
+
+	 UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	 Aboxhandler* BoxHandlerRef;
 
 protected:
 
