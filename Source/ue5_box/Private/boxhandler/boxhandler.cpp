@@ -109,21 +109,19 @@ void Aboxhandler::InitializeBox(FString Type, FVector Location, FRotator Rotatio
 // Apply damage to the box and reduce health
 void Aboxhandler::ApplyDamage()
 {
-    if (CubeHealth > 0)
-    {
-        CubeHealth -= 1;
+	CubeHealth -= 1; // Reduce health by 1  
 
         if (CubeHealth <= 0)
         {
             DestroyBox();
         }
-    }
+    
 }
 
 // Destroy the box and update the score
 void Aboxhandler::DestroyBox()
 {
-    TotalScore += CubeScore;
+    TotalScore += CubeScore;//incase use of static variable
 
     // Get the player reference
     Aue5_boxCharacter* PlayerReference = Cast<Aue5_boxCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
@@ -139,5 +137,5 @@ void Aboxhandler::DestroyBox()
 
 void Aboxhandler::UpdateScore()
 {
-    UE_LOG(LogTemp, Warning, TEXT("Total Score: %d"), TotalScore);
+    UE_LOG(LogTemp, Warning, TEXT("Cube Score: %d"), TotalScore);
 }

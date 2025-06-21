@@ -84,7 +84,7 @@ void Aue5_boxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &Aue5_boxCharacter::LookInput);
 
 		//lmbaction
-		EnhancedInputComponent->BindAction(LMB_Action, ETriggerEvent::Triggered, this, &Aue5_boxCharacter::lmb_action);
+		EnhancedInputComponent->BindAction(LMB_Action, ETriggerEvent::Started, this, &Aue5_boxCharacter::lmb_action);
 		//spawnedaction
 		EnhancedInputComponent->BindAction(Spawn_Action, ETriggerEvent::Started, this, &Aue5_boxCharacter::spawned_action);
 	}
@@ -187,7 +187,7 @@ void Aue5_boxCharacter::FireLineTrace()
 		AActor* HitActor = HitResult.GetActor();
 
 		// Draw impact point — small green sphere
-		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 12, FColor::Green, false, 2.0f);
+		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 12, FColor::Black, false, 2.0f);
 
 		if (HitActor)
 		{

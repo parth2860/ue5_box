@@ -31,7 +31,7 @@ void Ajson_boxspawner::Tick(float DeltaTime)
 void Ajson_boxspawner::ParseAndSpawnBoxes()
 {
     //-----------------------------------------------------------------------------------------------------------------
-    // Search for Acp_data class in the world
+    // Search for jsonhandler class in the world
     TArray<AActor*> FoundActors;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), Ajsonhandler::StaticClass(), FoundActors);//
 
@@ -40,17 +40,17 @@ void Ajson_boxspawner::ParseAndSpawnBoxes()
         DataClass = Cast<Ajsonhandler>(FoundActors[0]);
         if (DataClass)
         {
-            UE_LOG(LogTemp, Warning, TEXT("Acp_data found and initialized successfully."));
+            UE_LOG(LogTemp, Warning, TEXT("json_data found and initialized successfully."));
         }
         else
         {
-            UE_LOG(LogTemp, Error, TEXT("Failed to cast Acp_data."));
+            UE_LOG(LogTemp, Error, TEXT("Failed to cast json_data."));
             return;
         }
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("No Acp_data actor found in the world."));
+        UE_LOG(LogTemp, Error, TEXT("No json_data actor found in the world."));
         return;
     }
 

@@ -23,7 +23,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Function to fetch JSON data from the Acp_data class and spawn boxes
+	// Function to fetch JSON data
 	void ParseAndSpawnBoxes();
 
 	// Helper function to get type data by name

@@ -15,13 +15,6 @@ class UE5_BOX_API UScoreWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	// UI elements (TextBlocks or other UI elements)
-		//UPROPERTY(meta = (BindWidget))
-		//UTextBlock* ScoreText;
-
-		// The text block for displaying the score (exposed for manual setup)
-		//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI", meta = (AllowPrivateAccess = "true"))//to extend used in blueprint
-		// Score text reference
 public:
 
 	UPROPERTY(meta = (BindWidget))//to used in cpp

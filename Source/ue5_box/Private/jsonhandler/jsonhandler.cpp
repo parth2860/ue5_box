@@ -35,7 +35,7 @@ void Ajsonhandler::SendHttpRequest()
 {
     // Create HTTP request
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-    HttpRequest->SetURL(TEXT("https://raw.githubusercontent.com/CyrusCHAU/Varadise-Technical-Test/refs/heads/main/data.json")); // Replace with your URL
+    HttpRequest->SetURL(TEXT("https://raw.githubusercontent.com/CyrusCHAU/Varadise-Technical-Test/refs/heads/main/data.json")); 
     HttpRequest->SetVerb(TEXT("GET"));
     HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
