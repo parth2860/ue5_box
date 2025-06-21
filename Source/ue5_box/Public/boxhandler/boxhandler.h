@@ -28,12 +28,6 @@ public:
 
     //--------------------------------------------------------------
 
-    //void Getdata(const TArray<FBoxData>& BoxDataArray);
-    void Getdata();
-
-    UPROPERTY()
-    Ajsonhandler* JsonHandlerRef;
-
     // Function to initialize the box with the required properties
     void InitializeBox(FString Boxtype, FVector Location, FRotator Rotation, FVector Scale, FLinearColor Color, int32 Health, int32 Score);
 

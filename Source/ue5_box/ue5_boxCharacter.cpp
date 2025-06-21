@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "boxhandler/boxhandler.h"
+#include "jsonhandler/json_boxspawner.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -138,31 +139,7 @@ void Aue5_boxCharacter::spawned_action()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Spawned Action Triggered!"));
 
+	Ajson_boxspawner* data = Cast<Ajson_boxspawner>(UGameplayStatics::GetActorOfClass(GetWorld(), Ajson_boxspawner::StaticClass()));
 
-	/*if (BoxHandlerRef)
-	{
-		BoxHandlerRef->Getdata();
-		UE_LOG(LogTemp, Log, TEXT("Called Getdata() on Aboxhandler via reference."));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("BoxHandlerRef is NULL!"));
-	}*/
-	//
-	TArray<AActor*> FoundBoxHandlers;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), Aboxhandler::StaticClass(), FoundBoxHandlers);
-
-	if (FoundBoxHandlers.Num() > 0)
-	{
-		Aboxhandler* BoxHandler = Cast<Aboxhandler>(FoundBoxHandlers[0]);
-		if (BoxHandler)
-		{
-			BoxHandler->Getdata();
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Aboxhandler actor found in level!"));
-	}
-
+	data->ParseAndSpawnBoxes();
 }

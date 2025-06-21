@@ -22,8 +22,7 @@ Ajsonhandler::Ajsonhandler()
 void Ajsonhandler::BeginPlay()
 {
 	Super::BeginPlay();
-    
-    FetchBoxData();
+    SendHttpRequest();
 }
 
 // Called every frame
@@ -32,171 +31,147 @@ void Ajsonhandler::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-
-// Function to Start Fetching JSON Data
-void Ajsonhandler::FetchBoxData()
+//----------------------------------------------------------------------------------------------------------
+void Ajsonhandler::SendHttpRequest()
 {
-    FHttpModule* Http = &FHttpModule::Get();
-    if (!Http) { UE_LOG(LogTemp, Error, TEXT("HTTP Module not found!")); return; }
+    // Create HTTP request
+    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+    HttpRequest->SetURL(TEXT("https://raw.githubusercontent.com/CyrusCHAU/Varadise-Technical-Test/refs/heads/main/data.json")); // Replace with your URL
+    HttpRequest->SetVerb(TEXT("GET"));
+    HttpRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
-    TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = Http->CreateRequest();
-    Request->OnProcessRequestComplete().BindUObject(this, &Ajsonhandler::OnBoxDataResponseReceived);
-    Request->SetURL("https://raw.githubusercontent.com/CyrusCHAU/Varadise-Technical-Test/refs/heads/main/data.json");
-    Request->SetVerb("GET");
-    Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+    // Bind the response callback
+    HttpRequest->OnProcessRequestComplete().BindUObject(this, &Ajsonhandler::OnHttpResponseReceived);
 
-    if (!Request->ProcessRequest())
+    // Process the request
+    if (!HttpRequest->ProcessRequest())
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to start HTTP request!"));
+        LogError(TEXT("Failed to process HTTP request."));
     }
 }
 
-// Callback when HTTP Response is Received and parses the JSON data
-void Ajsonhandler::OnBoxDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+void Ajsonhandler::OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
     if (!bWasSuccessful || !Response.IsValid())
     {
-        UE_LOG(LogTemp, Error, TEXT("HTTP request failed or response invalid!"));
+        LogError(TEXT("HTTP request failed or response is invalid."));
         return;
     }
 
-    if (EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+    if (Response->GetResponseCode() != 200)
     {
-        FString JsonStr = Response->GetContentAsString();
-
-        CachedBoxData.Empty();
-        ParseJson(JsonStr, CachedBoxData);
-
-        UE_LOG(LogTemp, Log, TEXT("Sending %d boxes to BoxHandler..."), CachedBoxData.Num());
+        FString ErrorMessage = FString::Printf(TEXT("HTTP Error: %d"), Response->GetResponseCode());
+        LogError(ErrorMessage);
+        return;
     }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("HTTP Error: %d %s"), Response->GetResponseCode(), *Response->GetContentAsString());
-    }
-}
 
-void Ajsonhandler::ParseJson(const FString& JsonStr, TArray<FBoxData>& ParsedBoxData)
-{
+    const FString ResponseString = Response->GetContentAsString();
     TSharedPtr<FJsonObject> JsonObject;
-    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonStr);
+    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(ResponseString);
+
+
+    // Print the raw JSON response string
+    PrintJsonResponse(ResponseString);
+
+
 
     if (!FJsonSerializer::Deserialize(Reader, JsonObject) || !JsonObject.IsValid())
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to parse JSON!"));
+        LogError(TEXT("Failed to parse JSON response."));
         return;
     }
 
-    const TArray<TSharedPtr<FJsonValue>>* ObjectArray;
-    if (!JsonObject->TryGetArrayField(TEXT("objects"), ObjectArray))
-    {
-        UE_LOG(LogTemp, Error, TEXT("JSON does not contain 'objects' array!"));
-        return;
-    }
-
-    for (const TSharedPtr<FJsonValue>& ObjectValue : *ObjectArray)
-    {
-        TSharedPtr<FJsonObject> Object = ObjectValue->AsObject();
-        if (!Object.IsValid())
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Invalid object entry!"));
-            continue;
-        }
-
-        FBoxData Data;
-
-        if (Object->HasField(TEXT("type")))
-        {
-            Data.Type = Object->GetStringField(TEXT("type"));
-        }
-
-        if (Object->HasField(TEXT("transform")))
-        {
-            TSharedPtr<FJsonObject> TransformObject = Object->GetObjectField(TEXT("transform"));
-
-            const TArray<TSharedPtr<FJsonValue>>* LocationArray;
-            if (TransformObject->TryGetArrayField(TEXT("location"), LocationArray) && LocationArray->Num() == 3)
-            {
-                Data.Location = FVector(
-                    (*LocationArray)[0]->AsNumber(),
-                    (*LocationArray)[1]->AsNumber(),
-                    (*LocationArray)[2]->AsNumber()
-                );
-            }
-
-            const TArray<TSharedPtr<FJsonValue>>* RotationArray;
-            if (TransformObject->TryGetArrayField(TEXT("rotation"), RotationArray) && RotationArray->Num() == 3)
-            {
-                Data.Rotation = FRotator(
-                    (*RotationArray)[1]->AsNumber(),
-                    (*RotationArray)[2]->AsNumber(),
-                    (*RotationArray)[0]->AsNumber()
-                );
-            }
-
-            const TArray<TSharedPtr<FJsonValue>>* ScaleArray;
-            if (TransformObject->TryGetArrayField(TEXT("scale"), ScaleArray) && ScaleArray->Num() == 3)
-            {
-                Data.Scale = FVector(
-                    (*ScaleArray)[0]->AsNumber(),
-                    (*ScaleArray)[1]->AsNumber(),
-                    (*ScaleArray)[2]->AsNumber()
-                );
-            }
-        }
-
-        if (Object->HasField(TEXT("health")))
-        {
-            Data.Health = Object->GetNumberField(TEXT("health"));
-        }
-        else
-        {
-            Data.Health = 10.f;
-        }
-
-        if (Object->HasField(TEXT("score")))
-        {
-            Data.Score = static_cast<int32>(Object->GetNumberField(TEXT("score")));
-        }
-        else
-        {
-            Data.Score = 100;
-        }
-
-        const TArray<TSharedPtr<FJsonValue>>* ColorArray;
-        if (Object->TryGetArrayField(TEXT("color"), ColorArray) && ColorArray->Num() == 4)
-        {
-            Data.Color = FLinearColor(
-                (*ColorArray)[0]->AsNumber(),
-                (*ColorArray)[1]->AsNumber(),
-                (*ColorArray)[2]->AsNumber(),
-                (*ColorArray)[3]->AsNumber()
-            );
-        }
-        else
-        {
-            Data.Color = FLinearColor::White;
-        }
-
-        ParsedBoxData.Add(Data);
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("Parsed %d box objects from JSON"), ParsedBoxData.Num());
-    //DisplayCachedBoxData();
+    // ProcessJson(JsonObject);
+    ParsedJsonData.Empty(); // Clear existing data
+    ParsedJsonData.Add(JsonObject);
+    //
+    // Print the raw JSON response string
+   // UE_LOG(LogTemp, Warning, TEXT("Raw JSON Response: %s"), *ResponseString);
 }
-void Ajsonhandler::DisplayCachedBoxData()
+TArray<TSharedPtr<FJsonObject>> Ajsonhandler::GetParsedJsonData() const
 {
-    UE_LOG(LogTemp, Log, TEXT("\n=== Displaying Cached Box Data ==="));
 
-    for (const FBoxData& BoxData : CachedBoxData)
+    // Perform your JSON parsing logic here
+    if (ParsedJsonData.Num() > 0)
     {
-        UE_LOG(LogTemp, Log, TEXT("--- Box Data ---"));
-        UE_LOG(LogTemp, Log, TEXT("Type: %s"), *BoxData.Type);
-        UE_LOG(LogTemp, Log, TEXT("Location: %s"), *BoxData.Location.ToString());
-        UE_LOG(LogTemp, Log, TEXT("Rotation: %s"), *BoxData.Rotation.ToString());
-        UE_LOG(LogTemp, Log, TEXT("Scale: %s"), *BoxData.Scale.ToString());
-        UE_LOG(LogTemp, Log, TEXT("Health: %f"), BoxData.Health);
-        UE_LOG(LogTemp, Log, TEXT("Score: %d"), BoxData.Score);
-        UE_LOG(LogTemp, Log, TEXT("Color: R=%f G=%f B=%f A=%f"),
-            BoxData.Color.R, BoxData.Color.G, BoxData.Color.B, BoxData.Color.A);
+        UE_LOG(LogTemp, Warning, TEXT("Parsing JSON data..."));
     }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("ParsedJsonData array is empty."));
+    }
+    return ParsedJsonData;
+}
+void Ajsonhandler::PrintJsonResponse(const FString& JsonResponse)
+{
+    // Log the raw JSON string received
+   // UE_LOG(LogTemp, Warning, TEXT("Raw JSON Response: %s"), *JsonResponse);
+}
+void Ajsonhandler::ProcessJson(const TSharedPtr<FJsonObject>& JsonObject)
+{
+    // Loop through all fields in the root JSON object dynamically
+    for (const auto& Pair : JsonObject->Values)
+    {
+        const FString& Key = Pair.Key;
+        const TSharedPtr<FJsonValue>& JsonValue = Pair.Value;
+
+        // Process each field dynamically
+        //UE_LOG(LogTemp, Log, TEXT("Key: %s"), *Key);
+        ProcessJsonValue(JsonValue);
+    }
+}
+//Check all field in json Object
+void Ajsonhandler::ProcessJsonValue(const TSharedPtr<FJsonValue>& JsonValue)
+{
+    switch (JsonValue->Type)
+    {
+    case EJson::Null:
+        UE_LOG(LogTemp, Log, TEXT("Value is Null"));
+        break;
+
+    case EJson::String:
+        //UE_LOG(LogTemp, Log, TEXT("Value (String): %s"), *JsonValue->AsString());
+        break;
+
+    case EJson::Number:
+        //UE_LOG(LogTemp, Log, TEXT("Value (Number): %f"), JsonValue->AsNumber());
+        break;
+
+    case EJson::Boolean:
+        // UE_LOG(LogTemp, Log, TEXT("Value (Boolean): %s"), JsonValue->AsBool() ? TEXT("true") : TEXT("false"));
+        break;
+
+    case EJson::Array:
+    {
+        // Handle array of values
+        const TArray<TSharedPtr<FJsonValue>>& JsonArray = JsonValue->AsArray();
+        for (const TSharedPtr<FJsonValue>& ArrayItem : JsonArray)
+        {
+            //UE_LOG(LogTemp, Log, TEXT("Array Item:"));
+            ProcessJsonValue(ArrayItem); // Recursively process array items
+        }
+        break;
+    }
+
+    case EJson::Object:
+    {
+        // Handle nested object
+        TSharedPtr<FJsonObject> NestedObject = JsonValue->AsObject();
+        for (const auto& Pair : NestedObject->Values)
+        {
+            //UE_LOG(LogTemp, Log, TEXT("Nested Object Key: %s"), *Pair.Key);
+            ProcessJsonValue(Pair.Value); // Recursively process nested object fields
+        }
+        break;
+    }
+
+    default:
+        UE_LOG(LogTemp, Log, TEXT("Unhandled JSON Type"));
+        break;
+    }
+}
+
+void Ajsonhandler::LogError(const FString& ErrorMessage)
+{
+    UE_LOG(LogTemp, Error, TEXT("JSON Handler Error: %s"), *ErrorMessage);
 }

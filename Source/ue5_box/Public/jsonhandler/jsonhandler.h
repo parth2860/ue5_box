@@ -27,21 +27,31 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	// Function to start fetching box data
-	UFUNCTION(BlueprintCallable, Category = "Box Data")
-	void FetchBoxData();
+    //----------------------------------------------------------------------------------------------------------
 
-	// HTTP response callback
-	void OnBoxDataResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+    // HTTP Request Handler
+    void SendHttpRequest();
 
-	//void ParseJson(const FString& JsonString, TArray<FBoxData>& OutBoxDataArray);
-	void ParseJson(const FString& JsonStr, TArray<FBoxData>& ParsedBoxData);// parse & fill data
+    // Response Handlers
+    void OnHttpResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	// Store parsed data here
-	TArray<FBoxData> CachedBoxData;//store data
+    // Error Logger
+    void LogError(const FString& ErrorMessage);
 
-	// Provide the data to anyone asking------------------------
-	const TArray<FBoxData>& GetParsedBoxData() const { return CachedBoxData; }//read data later
-	
-	void DisplayCachedBoxData();
+    // Print JSON raw response
+    void PrintJsonResponse(const FString& JsonResponse);
+
+    // Process JSON dynamically
+    void ProcessJson(const TSharedPtr<FJsonObject>& JsonObject);
+
+    // Helper function to process nested JSON objects and arrays dynamically
+    void ProcessJsonValue(const TSharedPtr<FJsonValue>& JsonValue);
+
+    //----------------------------------------------------------------------------------------------------------
+    // Function to retrieve the parsed JSON objects
+    TArray<TSharedPtr<FJsonObject>> GetParsedJsonData() const;
+
+
+    // Array to hold the parsed JSON data
+    TArray<TSharedPtr<FJsonObject>> ParsedJsonData;
 };
