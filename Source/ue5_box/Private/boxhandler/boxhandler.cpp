@@ -3,7 +3,6 @@
 
 #include "boxhandler/boxhandler.h"
 #include "Engine/World.h"
-#include "boxhandler/data/boxdata.h"
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"

@@ -6,7 +6,6 @@
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
-#include "boxhandler/data/boxdata.h"
 #include "jsonhandler/jsonhandler.h"
 #include "boxhandler/boxhandler.h"
 

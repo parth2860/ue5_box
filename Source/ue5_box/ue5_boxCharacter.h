@@ -110,5 +110,14 @@ public:
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	//wepon mesh component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "wepon")
+	UStaticMeshComponent* weponmesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "wepon")
+	USceneComponent* muzzle;
+
+	void FireLineTrace();
+
 };
 

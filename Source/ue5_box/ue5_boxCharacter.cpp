@@ -49,6 +49,15 @@ Aue5_boxCharacter::Aue5_boxCharacter()
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+
+	weponmesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("weponmesh"));
+	weponmesh->SetupAttachment(FirstPersonCameraComponent);
+	//weponmesh->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f));
+	weponmesh->SetCollisionProfileName(FName("NoCollision"));
+
+	muzzle = CreateDefaultSubobject<USceneComponent>(TEXT("muzzle"));
+	muzzle->SetupAttachment(weponmesh);
+
 }
 
 void Aue5_boxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -133,6 +142,7 @@ void Aue5_boxCharacter::DoJumpEnd()
 void Aue5_boxCharacter::lmb_action()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("lmb Action Triggered!"));
+	FireLineTrace();
 }
 
 void Aue5_boxCharacter::spawned_action()
@@ -142,4 +152,53 @@ void Aue5_boxCharacter::spawned_action()
 	Ajson_boxspawner* data = Cast<Ajson_boxspawner>(UGameplayStatics::GetActorOfClass(GetWorld(), Ajson_boxspawner::StaticClass()));
 
 	data->ParseAndSpawnBoxes();
+}
+void Aue5_boxCharacter::FireLineTrace()
+{
+	// Start location from weapon mesh
+	FVector MuzzleLocation = muzzle->GetComponentLocation();
+
+	// Adjust forward direction offset (example: + forward * 50 units)
+	FVector ForwardVector = muzzle->GetForwardVector();
+	FVector StartLocation = MuzzleLocation + (ForwardVector * 50.0f); // adjust 50 as needed
+
+	FVector EndLocation = StartLocation + (ForwardVector * 10000.0f); // 10,000 units trace
+
+	FHitResult HitResult;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this); // ignore self
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams);
+
+
+	// Debug line to visualize trace
+	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, 1.0f, 0, 2.0f);
+
+	if (bHit)
+	{
+		AActor* HitActor = HitResult.GetActor();
+
+		// Draw impact point — small green sphere
+		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 12, FColor::Green, false, 2.0f);
+
+		if (HitActor)
+		{
+			// Print hit actor name and impact location
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+				FString::Printf(TEXT("Hit Actor: %s at Location: %s"),
+					*HitActor->GetName(),
+					*HitResult.ImpactPoint.ToString()));
+
+			// Specific hit condition — if hit Aboxhandler class
+			if (HitActor->IsA(Aboxhandler::StaticClass()))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Hit Aboxhandler — Score!"));
+			}
+		}
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, TEXT("No Hit"));
+	}
 }

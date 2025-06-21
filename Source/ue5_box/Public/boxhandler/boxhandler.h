@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "boxhandler/data/boxdata.h"
 #include "UObject/NoExportTypes.h"
 #include "jsonhandler/jsonhandler.h"
 #include "boxhandler.generated.h"

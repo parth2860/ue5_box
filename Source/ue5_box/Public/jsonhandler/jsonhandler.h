@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "UObject/NoExportTypes.h"
 #include "Http.h"
-#include "boxhandler/data/boxdata.h"
 #include "jsonhandler.generated.h"
 
 UCLASS()
