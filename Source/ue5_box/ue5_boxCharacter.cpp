@@ -59,6 +59,13 @@ Aue5_boxCharacter::Aue5_boxCharacter()
 	muzzle->SetupAttachment(weponmesh);
 
 }
+void Aue5_boxCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Initialize the score widget
+	InitializeScoreWidget();
+}
 
 void Aue5_boxCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
@@ -141,13 +148,13 @@ void Aue5_boxCharacter::DoJumpEnd()
 }
 void Aue5_boxCharacter::lmb_action()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("lmb Action Triggered!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("lmb Action Triggered!"));
 	FireLineTrace();
 }
 
 void Aue5_boxCharacter::spawned_action()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Spawned Action Triggered!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Spawned Action Triggered!"));
 
 	Ajson_boxspawner* data = Cast<Ajson_boxspawner>(UGameplayStatics::GetActorOfClass(GetWorld(), Ajson_boxspawner::StaticClass()));
 
@@ -185,20 +192,76 @@ void Aue5_boxCharacter::FireLineTrace()
 		if (HitActor)
 		{
 			// Print hit actor name and impact location
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+			/*GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
 				FString::Printf(TEXT("Hit Actor: %s at Location: %s"),
 					*HitActor->GetName(),
-					*HitResult.ImpactPoint.ToString()));
+					*HitResult.ImpactPoint.ToString()));*/
 
 			// Specific hit condition — if hit Aboxhandler class
-			if (HitActor->IsA(Aboxhandler::StaticClass()))
+			/*if (HitActor->IsA(Aboxhandler::StaticClass()))
 			{
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Hit Aboxhandler — Score!"));
+			}*/
+			if (Aboxhandler* Box = Cast<Aboxhandler>(HitActor))
+			{
+				Box->ApplyDamage(); 
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Called Aboxhandler::ApplyDamage()!"));
 			}
 		}
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, TEXT("No Hit"));
+		// GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, TEXT("No Hit"));
+	}
+}
+// Called when Cube destroyed
+void Aue5_boxCharacter::InitializeScoreWidget()
+{
+	if (ScoreWidgetClass)
+	{
+		// Create the widget
+		ScoreWidget = CreateWidget<UScoreWidget>(GetWorld(), ScoreWidgetClass);
+
+		if (ScoreWidget)
+		{
+			// Add widget to the viewport
+			ScoreWidget->AddToViewport();
+			UE_LOG(LogTemp, Warning, TEXT("ScoreWidget added to viewport successfully."));
+
+			// Optional: Ensure it's visible
+			ScoreWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to create ScoreWidget from ScoreWidgetClass."));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ScoreWidgetClass is not set."));
+	}
+}
+
+// Called when Cube destroyed
+void Aue5_boxCharacter::UpdateScoreOnUI(int32 NewScore)
+{
+	if (ScoreWidget)
+	{
+		//ScoreWidget->UpdateScore(NewScore);
+
+		// Cast to your custom widget class to access specific functions
+		if (UScoreWidget* CustomWidget = Cast<UScoreWidget>(ScoreWidget))
+		{
+			playerscore = playerscore + NewScore;	
+			CustomWidget->UpdateScore(playerscore);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ScoreWidget is not of type Uui_widget"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ScoreWidget is not initialized"));
 	}
 }

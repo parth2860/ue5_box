@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "boxhandler/boxhandler.h"
+#include "hud/ScoreWidget.h"
 #include "ue5_boxCharacter.generated.h"
 
 class UInputComponent;
@@ -63,6 +64,8 @@ public:
 
 protected:
 
+	virtual void BeginPlay() override;
+
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -119,5 +122,21 @@ public:
 
 	void FireLineTrace();
 
+	//widget class for score display
+
+	// Function to update the score in the UI
+	void UpdateScoreOnUI(int32 NewScore);
+	// Reference to the score widget class
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UScoreWidget> ScoreWidgetClass;
+
+	// Instance of the score widget
+	UPROPERTY()
+	UScoreWidget* ScoreWidget;
+
+	// Helper function to initialize the score widget
+	void InitializeScoreWidget();
+
+	int playerscore;
 };
 

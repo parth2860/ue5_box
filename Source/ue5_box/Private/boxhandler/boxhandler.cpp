@@ -5,7 +5,12 @@
 #include "Engine/World.h"
 #include "Engine/StaticMeshActor.h"
 #include "Kismet/GameplayStatics.h"
+#include "ue5_boxCharacter.h"
 #include "Materials/MaterialInstanceDynamic.h"
+
+// Static score variable
+//int32 Aboxhandler::TotalScore = 0;
+
 
 // Sets default values
 Aboxhandler::Aboxhandler()
@@ -41,6 +46,8 @@ void Aboxhandler::BeginPlay()
 {
     Super::BeginPlay();
     
+    // Static score variable reset at every instance loadup
+    //Aboxhandler::TotalScore = 0;
 }
 // Initialize the box properties using data from the JSON
 void Aboxhandler::InitializeBox(FString Type, FVector Location, FRotator Rotation, FVector Scale, FLinearColor Color, int32 Health, int32 Score)
@@ -119,12 +126,12 @@ void Aboxhandler::DestroyBox()
     TotalScore += CubeScore;
 
     // Get the player reference
-    /*Aue5_fps_boxCharacter* PlayerReference = Cast<Aue5_fps_boxCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+    Aue5_boxCharacter* PlayerReference = Cast<Aue5_boxCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
     if (PlayerReference)
     {
         PlayerReference->UpdateScoreOnUI(TotalScore);
-    }*/
+    }
 
     Destroy();
     UpdateScore();
